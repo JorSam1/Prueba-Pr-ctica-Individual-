@@ -1,1 +1,164 @@
+#include <iostream>
+#include <fstream>   // Para manejo de archivos
+#include <string>    // Para cadenas de texto
+#include <ctime>     // Para la fecha y hora del sistema
+#include <iomanip>   // Para dar formato a los decimales
 
+using namespace std;
+
+// Estructura para agrupar los resultados del procesamiento de notas
+struct Resultados {
+    float promedio;
+    float notaMayor;
+    float notaMenor;
+    int aprobados;
+    int reprobados;
+};
+
+// --- PROTOTIPOS DE FUNCIONES ---
+void menu();
+void realizarOperaciones();
+Resultados registrarNotas();
+void guardarArchivo(string nombre, Resultados res);
+
+int main() {
+    int opcion;
+    string nombreEstudiante;
+    Resultados misResultados;
+    bool notasRegistradas = false;
+
+    cout << "SISTEMA DE GESTION ACADEMICA" << endl;
+    cout << "Ingrese el nombre del estudiante: ";
+    getline(cin, nombreEstudiante);
+
+    do {
+        cout << "\n===============================" << endl;
+        cout << "       MENU INTERACTIVO" << endl;
+        cout << "===============================" << endl;
+        cout << "1. Operaciones basicas" << endl;
+        cout << "2. Registro de notas" << endl;
+        cout << "3. Guardar resultados" << endl;
+        cout << "4. Salir" << endl;
+        cout << "Seleccione una opcion: ";
+        cin >> opcion;
+
+        switch (opcion) {
+            case 1:
+                realizarOperaciones();
+                break;
+            case 2:
+                misResultados = registrarNotas();
+                notasRegistradas = true;
+                break;
+            case 3:
+                if (notasRegistradas) {
+                    guardarArchivo(nombreEstudiante, misResultados);
+                } else {
+                    cout << "\n[!] Error: Primero debe registrar notas en la opcion 2." << endl;
+                }
+                break;
+            case 4:
+                cout << "Saliendo del programa..." << endl;
+                break;
+            default:
+                cout << "Opcion no valida, intente de nuevo." << endl;
+        }
+    } while (opcion != 4);
+
+    return 0;
+}
+
+// --- IMPLEMENTACION DE FUNCIONES ---
+
+void realizarOperaciones() {
+    float n1, n2;
+    int subOpcion;
+    cout << "\n--- OPERACIONES MATEMATICAS ---" << endl;
+    cout << "Ingrese numero 1: "; cin >> n1;
+    cout << "Ingrese numero 2: "; cin >> n2;
+    cout << "1. Suma | 2. Resta | 3. Multiplicacion | 4. Division" << endl;
+    cout << "Seleccione: "; cin >> subOpcion;
+
+    switch (subOpcion) {
+        case 1: cout << "Resultado Suma: " << n1 + n2 << endl; break;
+        case 2: cout << "Resultado Resta: " << n1 - n2 << endl; break;
+        case 3: cout << "Resultado Multiplicacion: " << n1 * n2 << endl; break;
+        case 4: 
+            if (n2 != 0) 
+                cout << "Resultado Division: " << n1 / n2 << endl;
+            else 
+                cout << "Error: No se puede dividir por cero." << endl;
+            break;
+        default: cout << "Opcion invalida." << endl;
+    }
+}
+
+Resultados registrarNotas() {
+    float notas[5];
+    float suma = 0;
+    Resultados r;
+    r.aprobados = 0;
+    r.reprobados = 0;
+
+    cout << "\n--- REGISTRO DE 5 NOTAS ---" << endl;
+    for (int i = 0; i < 5; i++) {
+        do {
+            cout << "Ingrese nota " << i + 1 << " (0-10): ";
+            cin >> notas[i];
+        } while (notas[i] < 0 || notas[i] > 10); // Validacion de rango
+
+        suma += notas[i];
+
+        // Determinar mayor y menor
+        if (i == 0) {
+            r.notaMayor = notas[i];
+            r.notaMenor = notas[i];
+        } else {
+            if (notas[i] > r.notaMayor) r.notaMayor = notas[i];
+            if (notas[i] < r.notaMenor) r.notaMenor = notas[i];
+        }
+
+        // Contar aprobados/reprobados (base 7)
+        if (notas[i] >= 7) r.aprobados++;
+        else r.reprobados++;
+    }
+
+    r.promedio = suma / 5;
+    
+    cout << "\n--- PROCESAMIENTO FINALIZADO ---" << endl;
+    cout << "Promedio: " << fixed << setprecision(2) << r.promedio << endl;
+    cout << "Nota mas alta: " << r.notaMayor << endl;
+    cout << "Nota mas baja: " << r.notaMenor << endl;
+
+    return r;
+}
+
+void guardarArchivo(string nombre, Resultados res) {
+    ofstream archivo;
+    // Abrir en modo append (ios::app) para no borrar registros anteriores
+    archivo.open("resultados.txt", ios::app);
+
+    if (archivo.fail()) {
+        cout << "No se pudo abrir el archivo." << endl;
+        return;
+    }
+
+    // Obtener fecha y hora actual
+    time_t now = time(0);
+    char* dt = ctime(&now);
+
+    archivo << "------------------------------------------" << endl;
+    archivo << "ESTUDIANTE: " << nombre << endl;
+    archivo << "FECHA: " << dt; // ctime ya incluye un salto de linea
+    archivo << "LENGUAJE: C++" << endl;
+    archivo << "--- RESULTADOS ---" << endl;
+    archivo << "Promedio: " << res.promedio << endl;
+    archivo << "Nota Mayor: " << res.notaMayor << endl;
+    archivo << "Nota Menor: " << res.notaMenor << endl;
+    archivo << "Aprobados: " << res.aprobados << endl;
+    archivo << "Reprobados: " << res.reprobados << endl;
+    archivo << "------------------------------------------" << endl << endl;
+
+    archivo.close();
+    cout << "\n[+] Los resultados se han guardado en 'resultados.txt' correctamente." << endl;
+}
